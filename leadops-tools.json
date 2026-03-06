@@ -1,0 +1,136 @@
+{
+  "leadops_platform": {
+    "version": "1.0.0",
+    "domain": "notion.locker",
+    "description": "LeadOps Platform - GitHub-powered B2B lead generation and outreach SaaS",
+    "services": {
+      "lead_scraper": {
+        "name": "lead_scraper",
+        "repo": "helpinghands3631-bot/manus-web-scraper",
+        "subdomain": "scraper.notion.locker",
+        "description": "Scrape business leads from Google Maps or web sources by niche and location",
+        "endpoints": {
+          "scrape": {
+            "method": "POST",
+            "path": "/scrape",
+            "parameters": {
+              "query": { "type": "string", "required": true, "description": "Business type or keyword" },
+              "location": { "type": "string", "required": true, "description": "City or region" },
+              "max_results": { "type": "integer", "default": 50 }
+            },
+            "response": {
+              "leads": { "type": "array", "items": ["name", "address", "website", "email", "phone", "source"] }
+            }
+          },
+          "health": { "method": "GET", "path": "/health" }
+        }
+      },
+      "outreach_engine": {
+        "name": "outreach_engine",
+        "repo": "helpinghands3631-bot/manus-sales-automation",
+        "subdomain": "outreach.notion.locker",
+        "description": "Create and manage cold email campaigns with sequences, send batches, and retrieve stats",
+        "endpoints": {
+          "create_campaign": {
+            "method": "POST",
+            "path": "/campaigns",
+            "parameters": {
+              "name": { "type": "string", "required": true },
+              "segment": { "type": "string", "required": true },
+              "templates": { "type": "array", "required": true },
+              "schedule": { "type": "object" },
+              "throttle_limit": { "type": "integer", "default": 10 }
+            }
+          },
+          "send_batch": {
+            "method": "POST",
+            "path": "/send_batch",
+            "parameters": {
+              "campaign_id": { "type": "string", "required": true },
+              "lead_list": { "type": "array", "required": true }
+            }
+          },
+          "get_stats": {
+            "method": "GET",
+            "path": "/stats",
+            "parameters": {
+              "campaign_id": { "type": "string", "required": true }
+            }
+          }
+        }
+      },
+      "core_agent": {
+        "name": "core_agent",
+        "repo": "helpinghands3631-bot/manus-agent-core",
+        "subdomain": "agent.notion.locker",
+        "description": "ReAct loop framework for complex multi-step reasoning and workflow orchestration",
+        "endpoints": {
+          "run_task": {
+            "method": "POST",
+            "path": "/run_task",
+            "parameters": {
+              "goal": { "type": "string", "required": true, "description": "Natural language task description" },
+              "context": { "type": "object", "description": "Structured data: leads, campaign configs, constraints" },
+              "max_steps": { "type": "integer", "default": 25 }
+            },
+            "response": {
+              "steps": "array",
+              "logs": "array",
+              "final_plan": "string",
+              "recommended_actions": "array"
+            }
+          },
+          "health": { "method": "GET", "path": "/health" }
+        }
+      },
+      "grok_llm": {
+        "name": "grok_llm",
+        "provider": "xAI",
+        "base_url": "https://api.x.ai/v1",
+        "description": "xAI Grok via OpenAI-compatible API for high-quality copy and reasoning",
+        "endpoints": {
+          "chat": {
+            "method": "POST",
+            "path": "/chat/completions",
+            "headers": { "Authorization": "Bearer ${XAI_API_KEY}", "Content-Type": "application/json" },
+            "parameters": {
+              "model": { "type": "string", "default": "grok-2-latest" },
+              "messages": { "type": "array", "required": true },
+              "temperature": { "type": "float", "default": 0.7 },
+              "max_tokens": { "type": "integer", "default": 500 }
+            }
+          }
+        }
+      },
+      "api_gateway": {
+        "name": "api_gateway",
+        "repo": "helpinghands3631-bot/manus-api-gateway",
+        "subdomain": "api.notion.locker",
+        "description": "FastAPI gateway orchestrating all LeadOps services with auth and rate limiting",
+        "routes": {
+          "/api/scrape": "lead_scraper",
+          "/api/campaigns": "outreach_engine",
+          "/api/agent": "core_agent",
+          "/api/grok": "grok_llm"
+        }
+      }
+    },
+    "saas_plans": {
+      "plan_a": {
+        "name": "Local Lead Flood",
+        "target": "agencies and local lead sellers",
+        "includes": ["lead_scraper", "grok_llm"]
+      },
+      "plan_b": {
+        "name": "B2B Outbound Engine",
+        "target": "B2B SaaS and high-ticket service providers",
+        "includes": ["lead_scraper", "outreach_engine", "grok_llm"]
+      },
+      "plan_c": {
+        "name": "Fully Managed LeadOps",
+        "target": "agencies and bigger brands",
+        "includes": ["lead_scraper", "outreach_engine", "core_agent", "grok_llm"]
+      }
+    }
+  }
+}
